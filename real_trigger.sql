@@ -67,4 +67,40 @@ VALUES (4, 'What is figma?');
 
 select * from quiz;
 
+9--
+
+delimiter //
+create trigger after_question_delete
+after delete on questions
+for each row
+begin
+delete from options
+where question_id = old.question_id;
+end//
+delimiter ; 
+
+SET SQL_SAFE_UPDATES = 0;
+
+delete from questions where question_id = 3;
+
+10-- 
+
+create table deleted_users(
+user_id int,
+username varchar(50),
+email varchar(100),
+deleted_on timestamp default current_timestamp
+);
+
+delimiter //
+create trigger after_user_delete
+after delete on users
+for each row
+begin
+insert into deleted_users (user_id,username,email)
+values (old.user_id,old.username,old.email);
+end //
+delimiter ;
+DELETE FROM users WHERE user_id = 2;
+SELECT * FROM deleted_users;
 
