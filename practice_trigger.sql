@@ -12,6 +12,10 @@ values
 ('Alice', 'alice@example.com'),
 ('David', 'david@example.com');
 
+insert into users(username,email)
+values
+('Dingu', 'dingu@example.com');
+
 delimiter //
 create procedure ShowAllUsers()
 begin
@@ -40,6 +44,8 @@ end //
 delimiter ;
 
 call AddQuiz('python',3);
+CALL AddQuiz('MySQL Quiz', 0);
+CALL AddQuiz('Web Quiz', 0);
 
 3 --
 
@@ -82,23 +88,6 @@ answer_id int auto_increment primary key,
  option_text varchar(255),
  is_correct boolean
  );
- 
-INSERT INTO options (option_id, question_id, option_text, is_correct)
-VALUES
--- Question 1 (ID=1)
-(1, 1, 'A programming language', TRUE),
-(2, 1, 'A snake', FALSE),
-(3, 1, 'A fruit', FALSE),
-
--- Question 2 (ID=2)
-(4, 2, 'A database', TRUE),
-(5, 2, 'A mobile', FALSE),
-(6, 2, 'A laptop', FALSE);
-
-INSERT INTO user_answers (user_id, question_id, selected_option_id)
-VALUES
-(1, 1, 1), -- Correct (A programming language)
-(1, 2, 4); -- Correct (A database)
 
 
 
@@ -116,19 +105,14 @@ VALUES
  on ua.question_id = q.question_id
  join users u
  on ua.user_id = u.user_id
- where ua.user_id = u.user_id
+ WHERE ua.user_id = p_user_id
  and q.quiz_id = p_quiz_id
  and o.is_correct = true
  GROUP BY u.username;
  end //
  delimiter ;
  
- 
-
-
  drop procedure CalculateUserScore;
- 
- 
 INSERT INTO questions (quiz_id, question_text)
 VALUES
 (3, 'What is Python?'),
@@ -150,4 +134,82 @@ VALUES
 (1, 5, 1),
 (1, 6, 4);
 
- 
+DELETE FROM user_answers where answer_id > 0;
+DELETE FROM options where option_id > 0;
+DELETE FROM questions where question_id > 0;
+
+INSERT INTO questions (quiz_id, question_text)
+VALUES
+(3, 'What is Python?'),   -- question_id = 1
+(3, 'What is MySQL?');    -- question_id = 2
+
+INSERT INTO options (question_id, option_text, is_correct)
+VALUES
+(1, 'A programming language', TRUE),
+(1, 'A snake', FALSE),
+(1, 'A fruit', FALSE),
+
+(2, 'A database', TRUE),
+(2, 'A mobile', FALSE),
+(2, 'A laptop', FALSE);
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(1, 1, 1),  -- user chose correct answer for Q1
+(1, 2, 4);  -- user chose correct answer for Q2 (option_id 4)
+
+TRUNCATE TABLE user_answers;
+TRUNCATE TABLE options;
+TRUNCATE TABLE questions;
+
+INSERT INTO questions (quiz_id, question_text)
+VALUES
+(3, 'What is Python?'),
+(3, 'What is MySQL?');
+
+INSERT INTO options (question_id, option_text, is_correct)
+VALUES
+(1, 'A programming language', TRUE),
+(1, 'A snake', FALSE),
+(1, 'A fruit', FALSE),
+
+(2, 'A database', TRUE),
+(2, 'A mobile', FALSE),
+(2, 'A laptop', FALSE);
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(1, 1, 1),
+(1, 2, 4);
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(2, 1, 1),
+(3, 2, 4);
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(4, 1, 1),
+(4, 2, 4);
+
+DELIMITER //
+CREATE PROCEDURE TopPerformers()
+BEGIN
+    SELECT 
+        u.username,
+        COUNT(*) AS total_correct_answers
+    FROM user_answers ua
+    JOIN options o 
+        ON ua.selected_option_id = o.option_id
+    JOIN users u 
+        ON ua.user_id = u.user_id
+    WHERE o.is_correct = TRUE
+    GROUP BY u.user_id, u.username
+    ORDER BY total_correct_answers DESC
+    LIMIT 3;
+END //
+DELIMITER ;
+call TopPerformers();
+
+
+

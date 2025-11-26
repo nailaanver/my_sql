@@ -16,6 +16,7 @@ select * from employees where salary > 60000;
 select * from employees where join_date > '2021-01-01';
 select * from employees where dept_id = 3;
 select * from employees where emp_name like 'A%';
+
 update employees e
 join departments d on e.dept_id = d.dept_id
 set e.salary = e.salary * 1.10
