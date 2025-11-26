@@ -63,3 +63,91 @@ from questions
 where quiz_id = p_quiz_id;
 end //
 delimiter ;
+
+use db_trigger;
+
+call CountQuestions(2);
+
+4--
+create table user_answers(
+answer_id int auto_increment primary key,
+ user_id int,
+ question_id int,
+ selected_option_id int
+ );
+ 
+ create table options (
+ option_id int auto_increment primary key,
+ question_id int,
+ option_text varchar(255),
+ is_correct boolean
+ );
+ 
+INSERT INTO options (option_id, question_id, option_text, is_correct)
+VALUES
+-- Question 1 (ID=1)
+(1, 1, 'A programming language', TRUE),
+(2, 1, 'A snake', FALSE),
+(3, 1, 'A fruit', FALSE),
+
+-- Question 2 (ID=2)
+(4, 2, 'A database', TRUE),
+(5, 2, 'A mobile', FALSE),
+(6, 2, 'A laptop', FALSE);
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(1, 1, 1), -- Correct (A programming language)
+(1, 2, 4); -- Correct (A database)
+
+
+
+ delimiter //
+ create procedure CalculateUserScore(
+ in p_user_id int,
+ in p_quiz_id int
+ )
+ begin
+ select u.username,count(*) as total_correct_answers 
+ from user_answers ua
+ join options o
+ on ua.selected_option_id = o.option_id
+ join questions q
+ on ua.question_id = q.question_id
+ join users u
+ on ua.user_id = u.user_id
+ where ua.user_id = u.user_id
+ and q.quiz_id = p_quiz_id
+ and o.is_correct = true
+ GROUP BY u.username;
+ end //
+ delimiter ;
+ 
+ 
+
+
+ drop procedure CalculateUserScore;
+ 
+ 
+INSERT INTO questions (quiz_id, question_text)
+VALUES
+(3, 'What is Python?'),
+(3, 'What is MySQL?');
+
+INSERT INTO options (question_id, option_text, is_correct)
+VALUES
+(5, 'A programming language', TRUE),
+(5, 'A snake', FALSE),
+(5, 'A fruit', FALSE),
+
+(6, 'A database', TRUE),
+(6, 'A mobile', FALSE),
+(6, 'A laptop', FALSE);
+
+
+INSERT INTO user_answers (user_id, question_id, selected_option_id)
+VALUES
+(1, 5, 1),
+(1, 6, 4);
+
+ 
